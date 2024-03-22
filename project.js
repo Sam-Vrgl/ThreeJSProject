@@ -103,7 +103,7 @@ scene.add(obstacle);
 
 
 scene.add(cube);
-// scene.add(plane);
+scene.add(plane);
 
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
