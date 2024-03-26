@@ -14,15 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const stats = new Stats();
     document.body.appendChild(stats.dom);
 
-    // Add ground
-
-    // physicsWorld.addGround();
-    // Attempt to load and add the map
-    physicsWorld.addMap().then(({ threeObject, cannonBody }) => {
-        console.log('Map added to the physics world:', cannonBody);
-    }).catch(error => {
-        console.error('Failed to load the map:', error);
-    });
 
     //await sceneSetup.addRover();
     let roverMesh;
