@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(stats.dom);
 
     // Add ground
-    sceneSetup.addGround();
-    physicsWorld.addGround();
+
+    // physicsWorld.addGround();
     // Attempt to load and add the map
     physicsWorld.addMap().then(({ threeObject, cannonBody }) => {
         console.log('Map added to the physics world:', cannonBody);
@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     physicsWorld.addMap().then(mapBody => {
         // Map has been loaded and added to the physics world
         console.log('Map added to the physics world:', mapBody);
+    }).catch(error => {
+        // Handle any errors
+        console.error('Failed to load the map:', error);
+    });
+
+    sceneSetup.addMap().then(Tiles => {
+        // Map has been loaded and added to the physics world
+        console.log('Map added to the physics world:', Tiles);
     }).catch(error => {
         // Handle any errors
         console.error('Failed to load the map:', error);
@@ -131,7 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
             roverMesh.quaternion.multiply(adjustmentQuaternion);
             roverMesh.scale.set(5, 5, 5);
         }
+        // sceneSetup.camera.position.copy(car.chassisBody.position).add(new CANNON.Vec3(0, 10, 20));
 
+        // sceneSetup.controls.update();
 
         stats.end();
 
