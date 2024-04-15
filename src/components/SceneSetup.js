@@ -74,7 +74,7 @@ export class SceneSetup {
                     // Clone and position the tile
                     const TileClone = Tile.clone();
                     TileClone.scale.set(5, 5, 5);
-                    TileClone.position.set(x * 10, 6, y * 10);
+                    TileClone.position.set(x * 10 + 5, 0.1, y * 10 +5);
                     this.scene.add(TileClone);
 
                     // Move

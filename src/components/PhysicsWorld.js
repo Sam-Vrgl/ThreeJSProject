@@ -18,6 +18,58 @@ export class PhysicsWorld {
         this.world.addBody(groundBody);
     }
 
+    addTestObject() {
+        return new Promise((resolve, reject) => {
+            const gltfLoader = new GLTFLoader();
+            gltfLoader.load('./public/objects/Tile2.glb', (gltf) => {
+                const allPromises = [];
+
+                // Dimensions for a 10x10 grid
+                const rows = 10;
+                const cols = 10;
+                const spacing = 10; // Spacing of 10 units between tiles
+
+                // Iterate over the grid to place tiles
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        const scene = gltf.scene.clone(); // Clone the scene for each tile
+                        const compoundBody = new CANNON.Body({ mass: 0 });
+
+                        scene.traverse((child) => {
+                            if (child.isMesh) {
+                                const shape = threeToCannon(child, { type: ShapeType.HULL });
+                                if (!shape) {
+                                    console.error("Failed to convert a child mesh to a physics shape.");
+                                    return;
+                                }
+
+                                const offset = child.position;
+                                const orientation = child.quaternion;
+                                compoundBody.addShape(shape.shape, new CANNON.Vec3(offset.x, offset.y, offset.z), new CANNON.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
+                            }
+                        });
+
+                        // Set position for this tile based on grid coordinates, spacing the tiles 10 units apart
+                        const posX = (i - rows / 2) * spacing + spacing / 2;
+                        const posZ = (j - cols / 2) * spacing + spacing / 2;
+                        compoundBody.position.set(posX, 0, posZ);
+
+                        this.world.addBody(compoundBody);
+
+                        // Create an object to keep track of the Three.js and Cannon.js objects for this tile
+                        const tile = { threeObject: scene, cannonBody: compoundBody };
+                        allPromises.push(Promise.resolve(tile));
+                    }
+                }
+
+                // Resolve with all the tiles once they're all added
+                Promise.all(allPromises).then(resolve).catch(reject);
+            }, undefined, (error) => reject(error));
+        });
+    }
+
+
+
     addMap() {
         return new Promise((resolve, reject) => {
             const gltfLoader = new GLTFLoader();

@@ -18,6 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
     //await sceneSetup.addRover();
     let roverMesh;
 
+    physicsWorld.addTestObject().then(testObject => {
+        // Test object has been loaded and added to the physics world
+        console.log('Test object added to the physics world:', testObject);
+    }
+    ).catch(error => {
+        // Handle any errors
+        console.error('Failed to load the test object:', error);
+    });
+
     sceneSetup.addRover().then(rover => {
         // Rover has been loaded and added to the scene
         roverMesh = rover;
@@ -27,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to load the rover:', error);
     });
 
-    physicsWorld.addMap().then(mapBody => {
-        // Map has been loaded and added to the physics world
-        console.log('Map added to the physics world:', mapBody);
-    }).catch(error => {
-        // Handle any errors
-        console.error('Failed to load the map:', error);
-    });
+    // physicsWorld.addMap().then(mapBody => {
+    //     // Map has been loaded and added to the physics world
+    //     console.log('Map added to the physics world:', mapBody);
+    // }).catch(error => {
+    //     // Handle any errors
+    //     console.error('Failed to load the map:', error);
+    // });
 
     sceneSetup.addMap().then(Tiles => {
         // Map has been loaded and added to the physics world
