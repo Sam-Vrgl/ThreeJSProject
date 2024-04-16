@@ -14,6 +14,17 @@
 
     <button id="resetButton">Reset Game (Keep map)</button>
 
+    <!-- Instruction Modal -->
+    <div id="instructionModal"
+        style="display:block; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000;">
+        <div style="background:#fff; margin:100px auto; padding:20px; width:300px; position:relative;">
+            <h2>Welcome to the Game!</h2>
+            <p>You must reach the big green traction beam as fast as possible. Use WASD or ZQSD to navigate.</p>
+            <button id="startGame">Start Game</button>
+        </div>
+    </div>
+
+
     <div id="congratulationsModal"
         style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
         <div style="background:#fff; margin:100px auto; padding:20px; width:300px; position:relative;">
@@ -21,8 +32,14 @@
             <p>You completed the game in <span id="finalTime">00:00</span> seconds!</p>
             <input type="text" id="playerName" placeholder="Enter your name" />
             <button id="submitHighscore">Submit</button>
+            <h3>Top 5 High Scores</h3>
+            <ul id="highScoreList"></ul>
+            <!-- Clear Highscores button -->
+            <button id="clearHighscores">Clear Highscores</button>
         </div>
     </div>
+
+
 
 </body>
 

@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerStart = null;
     let timerInterval = null;
     let gameWon = false; 
+    let gameStarted = false;
+
+    const startGameButton = document.getElementById('startGame');
+    startGameButton.addEventListener('click', function() {
+        document.getElementById('instructionModal').style.display = 'none';
+        gameStarted = true; // Enable game controls
+    });
 
     function startTimer() {
         if (!timerStart) {
@@ -36,12 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function stopTimerAndShowModal() {
-        stopTimer();
-        const elapsed = ((Date.now() - timerStart) / 1000).toFixed(1);
-        document.getElementById('finalTime').textContent = elapsed;
-        document.getElementById('congratulationsModal').style.display = 'block';
-    }
+
 
     function displayTimer(time) {
         let timerDiv = document.getElementById('timer');
@@ -58,7 +60,29 @@ document.addEventListener('DOMContentLoaded', () => {
         timerDiv.textContent = `Time: ${time} s`;
     }
 
-    //All code relevant to the highscore
+    function stopTimerAndShowModal() {
+        stopTimer();
+        const elapsed = ((Date.now() - timerStart) / 1000).toFixed(1);
+        document.getElementById('finalTime').textContent = elapsed;
+        displayHighScores(); // Display the top 5 high scores
+        document.getElementById('congratulationsModal').style.display = 'block';
+    }
+    
+    function displayHighScores() {
+        const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
+        // Sort the highscores by time in ascending order
+        highscores.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
+        // Limit to top 5 high scores
+        const topScores = highscores.slice(0, 5);
+        const highScoreList = document.getElementById('highScoreList');
+        highScoreList.innerHTML = ''; // Clear existing list
+        topScores.forEach(score => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${score.name} - ${score.time} seconds`;
+            highScoreList.appendChild(listItem);
+        });
+    }
+    
     const submitBtn = document.getElementById('submitHighscore');
     if (submitBtn) {
         submitBtn.addEventListener('click', function() {
@@ -68,22 +92,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Submit button not found');
     }
 
-
+    const clearHighscoresBtn = document.getElementById('clearHighscores');
+    clearHighscoresBtn.addEventListener('click', function() {
+        localStorage.removeItem('highscores'); // Remove the highscores from local storage
+        document.getElementById('highScoreList').innerHTML = ''; // Clear the highscore list display
+        console.log('Highscores cleared');
+    });
+    
     function saveHighscore() {
         const playerName = document.getElementById('playerName').value;
         const finalTime = document.getElementById('finalTime').textContent;
-
         if (!playerName) {
             alert('Please enter your name.');
             return;
         }
         const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
         highscores.push({ name: playerName, time: finalTime });
-
         localStorage.setItem('highscores', JSON.stringify(highscores));
         document.getElementById('congratulationsModal').style.display = 'none';
         console.log('Highscore saved:', playerName, finalTime);
     }
+    
 
 
 
@@ -137,6 +166,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let start = false;
 
     document.addEventListener('keydown', (event) => {
+        if (!gameIsActive) return;
+        
+        const modal = document.getElementById('congratulationsModal');
+        const isFocusedInsideModal = modal.contains(document.activeElement);
+        const isInputFocused = document.activeElement.tagName === 'INPUT';
+    
+        // If the focus is inside the modal or on any input, return early
+        if (isFocusedInsideModal || isInputFocused) {
+            return;
+        }
+
         startTimer();
         switch (event.key) {
             case 'w':
@@ -279,12 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
         input.right = false;
         input.brake = false;
     
-        // Optionally, clear any pending asynchronous operations here
-        // For example, clear timeouts, intervals, or reset promises if necessary
-    
         document.getElementById('congratulationsModal').style.display = 'none';
     
-        console.clear(); // Clear the console if needed for debugging
+        console.clear(); // Clear the console 
     }
     
     

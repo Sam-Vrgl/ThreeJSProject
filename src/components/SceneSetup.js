@@ -18,7 +18,7 @@ export class SceneSetup {
         this.clock = new THREE.Clock();
         this.addLight();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.camera.position.set(0, 5, 10); 
+        this.camera.position.set(0, 5, 10);
         this.controls.update();
     }
 
@@ -26,22 +26,22 @@ export class SceneSetup {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
         directionalLight.position.set(120, 50, 120);
         // Set up shadow properties for the light
-        directionalLight.castShadow = true; 
-        directionalLight.shadow.mapSize.width = 4096*2; 
-        directionalLight.shadow.mapSize.height = 4096*2;
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 4096 * 2;
+        directionalLight.shadow.mapSize.height = 4096 * 2;
         directionalLight.shadow.camera.near = 0.5;
         directionalLight.shadow.camera.far = 5000;
         directionalLight.shadow.camera.left = -500;
         directionalLight.shadow.camera.right = 500;
         directionalLight.shadow.camera.top = 500;
         directionalLight.shadow.camera.bottom = -500;
-    
+
         this.scene.add(directionalLight);
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); 
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
         this.scene.add(ambientLight);
-    
+
     }
-    
+
     // Function to add the ground plane
     addGround() {
         const loader = new THREE.TextureLoader();
@@ -91,15 +91,15 @@ export class SceneSetup {
         const normalMap = textureLoader.load('./public/textures/rocks/Rock_045_Normal.jpg');
         const roughnessMap = textureLoader.load('./public/textures/rocks/Rock_045_Roughness.jpg');
         const heightMap = textureLoader.load('./public/textures/rocks/Rock_045_Height.png');
-        
+
         // Create material with textures
         const material = new THREE.MeshStandardMaterial({
-          map: diffuse,
-          aoMap: aoMap,
-          normalMap: normalMap,
-          roughnessMap: roughnessMap,
-          displacementMap: heightMap,
-          displacementScale: 0.1, 
+            map: diffuse,
+            aoMap: aoMap,
+            normalMap: normalMap,
+            roughnessMap: roughnessMap,
+            displacementMap: heightMap,
+            displacementScale: 0.1,
         });
         return material;
     }
@@ -122,15 +122,15 @@ export class SceneSetup {
         const normalMap = textureLoader.load('./public/textures/pillars/Rock_044_Normal.jpg');
         const roughnessMap = textureLoader.load('./public/textures/pillars/Rock_044_Roughness.jpg');
         const heightMap = textureLoader.load('./public/textures/pillars/Rock_044_Height.png');
-        
+
         // Create material with textures
         const material = new THREE.MeshStandardMaterial({
-          map: diffuse,
-          aoMap: aoMap,
-          normalMap: normalMap,
-          roughnessMap: roughnessMap,
-          displacementMap: heightMap,
-          displacementScale: 0.1, // This needs to be tuned depending on your height map and needs
+            map: diffuse,
+            aoMap: aoMap,
+            normalMap: normalMap,
+            roughnessMap: roughnessMap,
+            displacementMap: heightMap,
+            displacementScale: 0.1, // This needs to be tuned depending on your height map and needs
         });
         return material;
     }
@@ -150,35 +150,35 @@ export class SceneSetup {
         const planeSize = 500;
         const sphereMaterial = this.loadSphereTexture();
         const pillarMaterial = this.loadPillarTexture();
-    
+
         // Arrays to store properties of spheres and cylinders
         let sphereData = [];
         let pillarData = [];
-    
+
         // Create half-spheres
         for (let i = 0; i < numberOfHalfSpheres; i++) {
             const radius = Math.random() * 5 + 2; // Random radius between 2 and 7
             let position = new THREE.Vector3(
                 (Math.random() - 0.5) * planeSize,
-                (radius / 2)-(radius/3)-1,
+                (radius / 2) - (radius / 3) - 1,
                 (Math.random() - 0.5) * planeSize
             );
 
             while (position.length() < 10) {
                 position = new THREE.Vector3(
                     (Math.random() - 0.5) * planeSize,
-                    (radius / 2)-(radius/3)-1,
+                    (radius / 2) - (radius / 3) - 1,
                     (Math.random() - 0.5) * planeSize
                 );
             }
 
             const halfSphere = this.createHalfSphere(radius, position, sphereMaterial);
-            halfSphere.castShadow = true; 
+            halfSphere.castShadow = true;
             halfSphere.receiveShadow = true;
             this.scene.add(halfSphere);
             sphereData.push({ radius, position });
         }
-    
+
         // Create cylinders
         for (let i = 0; i < numberOfCylinders; i++) {
             const radius = Math.random() * 5 + 5; // Random radius between 5 and 10
@@ -192,7 +192,7 @@ export class SceneSetup {
             while (position.length() < 10) {
                 position = new THREE.Vector3(
                     (Math.random() - 0.5) * planeSize,
-                    (radius / 2)-(radius/3)-1,
+                    (radius / 2) - (radius / 3) - 1,
                     (Math.random() - 0.5) * planeSize
                 );
             }
@@ -203,7 +203,7 @@ export class SceneSetup {
             this.scene.add(cylinder);
             pillarData.push({ radius, height, position });
         }
-    
+
         return { spheres: sphereData, pillars: pillarData };
     }
 
@@ -227,21 +227,27 @@ export class SceneSetup {
 
     // Function to add the end zone
     addEndZone() {
-        const endX = Math.floor(Math.random() * (100 - 70 + 1)) + 70;
-        const endZ = Math.floor(Math.random() * (100 - 70 + 1)) + 70;
-    
-        const cylinderGeometry = new THREE.CylinderGeometry(10, 10, 20, 32);
-        const cylinderMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 }); // changed opacity to 0.5 for better visibility
-        const cylinderMesh = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-    
+        const maxDistance = 220;
+        const minDistance = 150;
+        const generateRandomDistance = () => Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
+        const randomSign = () => Math.random() < 0.5 ? -1 : 1;
 
-        cylinderMesh.position.set(endX, 10, endZ); 
-        cylinderMesh.scale.y = 100; 
-    
+        const endX = generateRandomDistance() * randomSign();
+        const endZ = generateRandomDistance() * randomSign();
+
+
+        const cylinderGeometry = new THREE.CylinderGeometry(10, 10, 20, 32);
+        const cylinderMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
+        const cylinderMesh = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+
+
+        cylinderMesh.position.set(endX, 10, endZ);
+        cylinderMesh.scale.y = 100;
+
         this.scene.add(cylinderMesh);
         return cylinderMesh;
     }
-    
+
     // Function to update the scene
     animate = () => {
         this.renderer.render(this.scene, this.camera);
