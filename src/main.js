@@ -166,8 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let start = false;
 
     document.addEventListener('keydown', (event) => {
-        if (!gameIsActive) return;
-        
+
+
         const modal = document.getElementById('congratulationsModal');
         const isFocusedInsideModal = modal.contains(document.activeElement);
         const isInputFocused = document.activeElement.tagName === 'INPUT';
