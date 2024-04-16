@@ -6,6 +6,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 
 export class SceneSetup {
+
+    // Constructor to set up the scene, camera, renderer, and controls
     constructor(container) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -13,26 +15,19 @@ export class SceneSetup {
         this.renderer.shadowMap.enabled = true;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement);
-
         this.clock = new THREE.Clock();
-
-        this.axesHelper = new THREE.AxesHelper(5);
-        this.scene.add(this.axesHelper);
-
         this.addLight();
-
-
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.camera.position.set(0, 5, 10); // Adjust as needed
+        this.camera.position.set(0, 5, 10); 
         this.controls.update();
     }
 
     addLight() {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
         directionalLight.position.set(120, 50, 120);
-        directionalLight.castShadow = true; // Enable shadows for this light
-    
-        directionalLight.shadow.mapSize.width = 4096*2; // Optional: Increase shadow resolution
+        // Set up shadow properties for the light
+        directionalLight.castShadow = true; 
+        directionalLight.shadow.mapSize.width = 4096*2; 
         directionalLight.shadow.mapSize.height = 4096*2;
         directionalLight.shadow.camera.near = 0.5;
         directionalLight.shadow.camera.far = 5000;
@@ -42,11 +37,12 @@ export class SceneSetup {
         directionalLight.shadow.camera.bottom = -500;
     
         this.scene.add(directionalLight);
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Reduce ambient light intensity
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); 
+        this.scene.add(ambientLight);
     
     }
     
-
+    // Function to add the ground plane
     addGround() {
         const loader = new THREE.TextureLoader();
 
@@ -85,6 +81,7 @@ export class SceneSetup {
 
     }
 
+    // Function to load shared obstacle materials
     loadSphereTexture() {
         const textureLoader = new THREE.TextureLoader();
 
@@ -102,11 +99,12 @@ export class SceneSetup {
           normalMap: normalMap,
           roughnessMap: roughnessMap,
           displacementMap: heightMap,
-          displacementScale: 0.1, // This needs to be tuned depending on your height map and needs
+          displacementScale: 0.1, 
         });
         return material;
     }
 
+    // Function to create a half-sphere obstacle
     createHalfSphere(radius, position, material) {
         const sphereGeom = new THREE.SphereGeometry(radius, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2);
         const halfSphere = new THREE.Mesh(sphereGeom, material);
@@ -114,6 +112,7 @@ export class SceneSetup {
         return halfSphere;
     }
 
+    // Function to load shared pillar materials
     loadPillarTexture() {
         const textureLoader = new THREE.TextureLoader();
 
@@ -136,7 +135,7 @@ export class SceneSetup {
         return material;
     }
 
-
+    // Function to create a pillar obstacle
     createPillar(radiusTop, radiusBottom, height, position, material) {
         const cylinderGeom = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 32);
         const cylinder = new THREE.Mesh(cylinderGeom, material);
@@ -144,6 +143,7 @@ export class SceneSetup {
         return cylinder;
     }
 
+    // Function to add obstacles to the scene
     addObstacles() {
         const numberOfHalfSpheres = 300;
         const numberOfCylinders = 20;
@@ -158,11 +158,20 @@ export class SceneSetup {
         // Create half-spheres
         for (let i = 0; i < numberOfHalfSpheres; i++) {
             const radius = Math.random() * 5 + 2; // Random radius between 2 and 7
-            const position = new THREE.Vector3(
+            let position = new THREE.Vector3(
                 (Math.random() - 0.5) * planeSize,
                 (radius / 2)-(radius/3)-1,
                 (Math.random() - 0.5) * planeSize
             );
+
+            while (position.length() < 10) {
+                position = new THREE.Vector3(
+                    (Math.random() - 0.5) * planeSize,
+                    (radius / 2)-(radius/3)-1,
+                    (Math.random() - 0.5) * planeSize
+                );
+            }
+
             const halfSphere = this.createHalfSphere(radius, position, sphereMaterial);
             halfSphere.castShadow = true; 
             halfSphere.receiveShadow = true;
@@ -174,11 +183,20 @@ export class SceneSetup {
         for (let i = 0; i < numberOfCylinders; i++) {
             const radius = Math.random() * 5 + 5; // Random radius between 5 and 10
             const height = Math.random() * 20 + 10; // Random height between 10 and 30
-            const position = new THREE.Vector3(
+            let position = new THREE.Vector3(
                 (Math.random() - 0.5) * planeSize,
                 0,
                 (Math.random() - 0.5) * planeSize
             );
+
+            while (position.length() < 10) {
+                position = new THREE.Vector3(
+                    (Math.random() - 0.5) * planeSize,
+                    (radius / 2)-(radius/3)-1,
+                    (Math.random() - 0.5) * planeSize
+                );
+            }
+
             const cylinder = this.createPillar(radius, radius, height, position, pillarMaterial);
             cylinder.castShadow = true;
             cylinder.receiveShadow = true;
@@ -188,68 +206,8 @@ export class SceneSetup {
     
         return { spheres: sphereData, pillars: pillarData };
     }
-    
 
-    addMap() {
-        return new Promise((resolve, reject) => {
-            const gltfLoader = new GLTFLoader();
-            gltfLoader.load('./public/objects/Tile1.glb', (gltf) => {
-                console.log(gltf);
-                const Tile = gltf.scene.children[0];
-
-                let x = 0, y = 0; // Initial position
-                let direction = 0; // 0: right, 1: up, 2: left, 3: down
-                let steps = 1; // Steps to move in the current direction
-                let stepCounter = 0; // Counter for steps taken in current direction
-                let directionChange = 0; // Counter for changing direction, increases step after 2 changes
-                let dx = [1, 0, -1, 0]; // Change in x for each direction
-                let dy = [0, 1, 0, -1]; // Change in y for each direction
-
-                // Total tiles to generate
-                let totalTiles = 30;
-
-                for (let i = 0; i < totalTiles; i++) {
-                    // Clone and position the tile
-                    const TileClone = Tile.clone();
-                    TileClone.scale.set(5, 5, 5);
-                    TileClone.position.set(x * 10 + 5, 0.1, y * 10 + 5);
-                    this.scene.add(TileClone);
-
-                    // Move
-                    x += dx[direction];
-                    y += dy[direction];
-                    stepCounter++;
-
-                    // Change direction if needed
-                    if (stepCounter == steps) {
-                        direction = (direction + 1) % 4; // Cycle through directions
-                        stepCounter = 0; // Reset step counter
-                        directionChange++;
-
-                        // Increase steps every 2 direction changes (a full cycle around the spiral)
-                        if (directionChange % 2 == 0) {
-                            steps++;
-                        }
-                    }
-                }
-                resolve(Tile); // Resolve the promise with the loaded rover
-            }, undefined, error => {
-                reject(error); // Reject the promise if there's an error
-            });
-        });
-    }
-
-
-
-    addSphere() {
-        const sphereGeometry = new THREE.SphereGeometry(1, 32, 32); // Radius, WidthSegments, HeightSegments
-        const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0x44aa88 });
-        const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        sphereMesh.position.set(0, 5, 0); // Position it 5 units above the ground
-        this.scene.add(sphereMesh);
-        return sphereMesh;
-    }
-
+    // Function to load the rover model
     addRover() {
         return new Promise((resolve, reject) => {
             const gltfLoader = new GLTFLoader();
@@ -267,6 +225,7 @@ export class SceneSetup {
         });
     }
 
+    // Function to add the end zone
     addEndZone() {
         const endX = Math.floor(Math.random() * (100 - 70 + 1)) + 70;
         const endZ = Math.floor(Math.random() * (100 - 70 + 1)) + 70;
@@ -283,8 +242,7 @@ export class SceneSetup {
         return cylinderMesh;
     }
     
-
-
+    // Function to update the scene
     animate = () => {
         this.renderer.render(this.scene, this.camera);
     }

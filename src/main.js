@@ -1,8 +1,6 @@
 import { SceneSetup } from './components/SceneSetup.js';
 import { PhysicsWorld } from './components/PhysicsWorld.js';
 import * as THREE from 'three';
-import * as CANNON from 'cannon-es';
-import CannonDebugger from 'cannon-es-debugger'
 import gsap from 'gsap';
 
 import Stats from 'stats.js';
@@ -16,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(stats.dom);
 
     //All code relevant to the timer
-
 
     let timerStart = null;
     let timerInterval = null;
@@ -112,16 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const endZoneMesh = sceneSetup.addEndZone();
 
 
-
+    //Code relevant to the endzone detection
     function checkCollision(roverMesh, endZoneMesh) {
-        if (!roverMesh || !endZoneMesh || gameWon) return false; // Skip check if game is already won
+        if (!roverMesh || !endZoneMesh || gameWon) return false; 
         const roverBox = new THREE.Box3().setFromObject(roverMesh);
         const endZoneBox = new THREE.Box3().setFromObject(endZoneMesh);
         if (roverBox.intersectsBox(endZoneBox)) {
             console.log('You win!');
-            if (!gameWon) { // Check if this is the first win trigger
+            if (!gameWon) { 
                 stopTimerAndShowModal();
-                gameWon = true; // Set the flag so this doesn't trigger again
+                gameWon = true; 
             }
             return true;
         }
@@ -165,14 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (event.key === 'z' || event.key === 's' || event.key === 'q' || event.key === 'd') {
             event.preventDefault();
-            // create 2 set of orange particles and add them to the scene, create tje particles on the left and right side of the rover
+            // create 2 set of orange particles and add them to the scene, create the particles on the left and right side of the rover
             const particles = new THREE.Group();
             sceneSetup.scene.add(particles);
             const particles2 = new THREE.Group();
             sceneSetup.scene.add(particles2);
-            const particleGeometry = new THREE.SphereGeometry(0.05, Math.floor(Math.random() * (32 - 10 + 1)) + 10, Math.floor(Math.random() * (32 - 10 + 1)) + 10);
-            const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xffa500 });
-            particleMaterial.color = randomColor;
+            const particleGeometry = new THREE.SphereGeometry(0.1, Math.floor(Math.random() * (32 - 10 + 1)) + 10, Math.floor(Math.random() * (32 - 10 + 1)) + 10);
+            const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             const particle = new THREE.Mesh(particleGeometry, particleMaterial);
             const particle2 = new THREE.Mesh(particleGeometry, particleMaterial);
             particle.position.copy(car.chassisBody.position);
@@ -266,13 +262,14 @@ document.addEventListener('DOMContentLoaded', () => {
             roverMesh.quaternion.set(0, 0, 0, 1);
         }
         if (car.chassisBody) {
-            car.chassisBody.position.set(0, 1.5, 0);
-            car.chassisBody.quaternion.set(0, 0, 0, 1);
             car.chassisBody.velocity.set(0, 0, 0);
             car.chassisBody.angularVelocity.set(0, 0, 0);
             car.chassisBody.force.set(0, 0, 0);
             car.chassisBody.torque.set(0, 0, 0);
             car.wheelForces = [0, 0, 0, 0];
+            car.chassisBody.position.set(0, 1.5, 0);
+            car.chassisBody.quaternion.set(0, 0, 0, 1);
+
         }
     
         // Ensure the input controls are reset
@@ -308,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (roverMesh) {
             roverMesh.position.copy(car.chassisBody.position);
             roverMesh.quaternion.copy(car.chassisBody.quaternion);
-            roverMesh.position.y += 0.5;
+            roverMesh.position.y -= 0.4;
             const adjustmentQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
             roverMesh.quaternion.multiply(adjustmentQuaternion);
             roverMesh.scale.set(5, 5, 5);
@@ -318,25 +315,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('You win!');
         }
 
-        // if (roverMesh) {
-        //     // Calculate the backward vector from the rover's orientation
-        //     const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(roverMesh.quaternion).negate();
+        if (roverMesh) {
+            const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(roverMesh.quaternion).negate();
+            const offset = backward.multiplyScalar(25).add(new THREE.Vector3(0, 15, 0));
+            sceneSetup.camera.position.copy(roverMesh.position).add(offset);
+            sceneSetup.camera.lookAt(roverMesh.position);
+        }
 
-        //     // Set the desired offset: distance behind the rover and height above the ground
-        //     const offset = backward.multiplyScalar(25).add(new THREE.Vector3(0, 15, 0));
 
-        //     // Update the camera's position to be behind the rover
-        //     sceneSetup.camera.position.copy(roverMesh.position).add(offset);
 
-        //     // Make the camera look at the rover
-        //     sceneSetup.camera.lookAt(roverMesh.position);
-        // }
 
-        // Call this in your animation loop or in a function that's regularly updated
-
-        sceneSetup.camera.position.copy(car.chassisBody.position).add(new THREE.Vector3(-car.chassisBody.velocity.x+3, 10, -car.chassisBody.velocity.z+3));
-        sceneSetup.camera.lookAt(car.chassisBody.position);
-        sceneSetup.controls.update();
 
         // gsap.to(bonus, {
         //     color: "red",
