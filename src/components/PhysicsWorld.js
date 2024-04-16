@@ -135,136 +135,189 @@ export class PhysicsWorld {
 
 
 
-    // addSphere() {
-    //     const sphereShape = new CANNON.Sphere(1); // Radius
-    //     const sphereBody = new CANNON.Body({
-    //         mass: 1, // Set the mass to something other than 0 to make it dynamic
-    //         shape: sphereShape
-    //     });
-    //     sphereBody.position.set(0, 5, 0); // Position it similarly to the Three.js mesh
-    //     this.world.addBody(sphereBody);
-    //     this.sphereBody = sphereBody;
-    //     return sphereBody;
-    // }
+    addObstacles(data) {
+    let sphereShape, cylinderShape, sphereBody, cylinderBody;
 
-    // applyForceToSphere(force) {
-    //     if (this.sphereBody) {
-    //         this.sphereBody.applyForce(force, this.sphereBody.position);
-    //     }
-    // }
-
-    addVehicle() {
-        const carBody = new CANNON.Body({
-            mass: 5,
-            position: new CANNON.Vec3(0, 5, 0),
-            shape: new CANNON.Box(new CANNON.Vec3(2, 0.8, 2))
+    // Loop over spheres data and add spheres to the world
+    for (let i = 0; i < data.spheres.length; i++) {
+        sphereShape = new CANNON.Sphere(data.spheres[i].radius);
+        sphereBody = new CANNON.Body({
+            mass: 0, // Assuming a mass of 1 for all spheres, you can change it as needed
+            position: new CANNON.Vec3(
+                data.spheres[i].position.x,
+                data.spheres[i].position.y,
+                data.spheres[i].position.z
+            ),
+            shape: sphereShape
         });
-
-
-        const vehicle = new CANNON.RigidVehicle({
-            chassisBody: carBody
-        });
-
-        const mass = 1;
-        const axisWidth = 5;
-        const wheelShape = new CANNON.Sphere(1);
-        const wheelMaterial = new CANNON.Material('wheel');
-        const down = new CANNON.Vec3(0, -1, 0);
-
-        const wheelBody1 = new CANNON.Body({ mass, material: wheelMaterial });
-        wheelBody1.addShape(wheelShape);
-        wheelBody1.angularDamping = 0.4;
-        vehicle.addWheel({
-            body: wheelBody1,
-            position: new CANNON.Vec3(-2, -1, axisWidth / 2),
-            axis: new CANNON.Vec3(0, 0, 1),
-            direction: down,
-        });
-
-        const wheelBody2 = new CANNON.Body({ mass, material: wheelMaterial });
-        wheelBody2.addShape(wheelShape);
-        wheelBody2.angularDamping = 0.4;
-        vehicle.addWheel({
-            body: wheelBody2,
-            position: new CANNON.Vec3(-2, -1, -axisWidth / 2),
-            axis: new CANNON.Vec3(0, 0, 1),
-            direction: down,
-        });
-
-        const wheelBody3 = new CANNON.Body({ mass, material: wheelMaterial });
-        wheelBody3.addShape(wheelShape);
-        wheelBody3.angularDamping = 0.4;
-        vehicle.addWheel({
-            body: wheelBody3,
-            position: new CANNON.Vec3(2, -1, axisWidth / 2),
-            axis: new CANNON.Vec3(0, 0, 1),
-            direction: down,
-        });
-        const wheelBody4 = new CANNON.Body({ mass, material: wheelMaterial });
-        wheelBody4.addShape(wheelShape);
-        wheelBody4.angularDamping = 0.4;
-        vehicle.addWheel({
-            body: wheelBody4,
-            position: new CANNON.Vec3(2, -1, -axisWidth / 2),
-            axis: new CANNON.Vec3(0, 0, 1),
-            direction: down,
-        });
-
-        vehicle.addToWorld(this.world);
-        return vehicle;
+        this.world.addBody(sphereBody);
     }
 
-    controlCar(input, vehicle) {
-        const maxSteerVal = Math.PI / 8;
-        const maxForce = 20;
+    // Loop over pillars data and add cylinders to the world
+    for (let i = 0; i < data.pillars.length; i++) {
+        cylinderShape = new CANNON.Cylinder(
+            data.pillars[i].radius,
+            data.pillars[i].radius,
+            data.pillars[i].height,
+            16 // number of segments, assuming a default value, you can change it as needed
+        );
+        let correctedYPosition = data.pillars[i].position.y + data.pillars[i].height / 2;
+        cylinderBody = new CANNON.Body({
+            mass: 0, // Assuming a mass of 1 for all cylinders, you can change it as needed
+            position: new CANNON.Vec3(
+                data.pillars[i].position.x,
+                correctedYPosition,
+                data.pillars[i].position.z
+            ),
+            shape: cylinderShape
+
+        });
+        this.world.addBody(cylinderBody);
+    }
+}
 
 
-        if (input.forward) {
-            vehicle.setWheelForce(maxForce, 2);
-            vehicle.setWheelForce(maxForce, 3);
-        } else if (!input.forward && !input.backward) {
-            vehicle.setWheelForce(0, 2);
-            vehicle.setWheelForce(0, 3);
-        }
+// applyForceToSphere(force) {
+//     if (this.sphereBody) {
+//         this.sphereBody.applyForce(force, this.sphereBody.position);
+//     }
+// }
+
+addVehicle() {
+    const carBody = new CANNON.Body({
+        mass: 5,
+        position: new CANNON.Vec3(0, 5, 0),
+        shape: new CANNON.Box(new CANNON.Vec3(2, 0.8, 2))
+    });
 
 
-        if (input.backward) {
-            vehicle.setWheelForce(-maxForce / 1.2, 2);
-            vehicle.setWheelForce(-maxForce / 1.2, 3);
-        } else if (!input.backward && !input.forward) {
-            vehicle.setWheelForce(0, 2);
-            vehicle.setWheelForce(0, 3);
-        }
+    const vehicle = new CANNON.RigidVehicle({
+        chassisBody: carBody
+    });
 
-        if (input.left) {
-            vehicle.setSteeringValue(maxSteerVal, 0);
-            vehicle.setSteeringValue(maxSteerVal, 1);
-            // vehicle.setSteeringValue(-maxSteerVal, 2);
-            // vehicle.setSteeringValue(-maxSteerVal, 3);
-        }
+    const mass = 1;
+    const axisWidth = 5;
+    const wheelShape = new CANNON.Sphere(1);
+    const wheelMaterial = new CANNON.Material('wheel');
+    const down = new CANNON.Vec3(0, -1, 0);
 
-        if (input.right) {
-            vehicle.setSteeringValue(-maxSteerVal, 0);
-            vehicle.setSteeringValue(-maxSteerVal, 1);
-            // vehicle.setSteeringValue(maxSteerVal, 2);
-            // vehicle.setSteeringValue(maxSteerVal, 3);
-        }
-        if (!input.right && !input.left) {
-            vehicle.setSteeringValue(0, 0);
-            vehicle.setSteeringValue(0, 1);
-            // vehicle.setSteeringValue(0, 2);
-            // vehicle.setSteeringValue(0, 3);
-        }
+    const wheelBody1 = new CANNON.Body({ mass, material: wheelMaterial });
+    wheelBody1.addShape(wheelShape);
+    wheelBody1.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody1,
+        position: new CANNON.Vec3(-2, -1, axisWidth / 2),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: down,
+    });
 
-        if (input.brake) {
-            vehicle.setWheelForce(0, 2);
-            vehicle.setWheelForce(0, 3);
-        }
+    const wheelBody2 = new CANNON.Body({ mass, material: wheelMaterial });
+    wheelBody2.addShape(wheelShape);
+    wheelBody2.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody2,
+        position: new CANNON.Vec3(-2, -1, -axisWidth / 2),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: down,
+    });
+
+    const wheelBody3 = new CANNON.Body({ mass, material: wheelMaterial });
+    wheelBody3.addShape(wheelShape);
+    wheelBody3.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody3,
+        position: new CANNON.Vec3(2, -1, axisWidth / 2),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: down,
+    });
+    const wheelBody4 = new CANNON.Body({ mass, material: wheelMaterial });
+    wheelBody4.addShape(wheelShape);
+    wheelBody4.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody4,
+        position: new CANNON.Vec3(2, -1, -axisWidth / 2),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: down,
+    });
+
+    vehicle.addToWorld(this.world);
+    return vehicle;
+}
+
+addEndZone() {
+    //randomly placed, at least 30 units away from the origin
+    const position = new CANNON.Vec3(
+        Math.floor(Math.random() * (100 - 50 + 1)) + 50,
+        0,
+        Math.floor(Math.random() * (100 - 50 + 1)) + 50
+    );
 
 
+    console.log('end zone position', position);
+    const size = new CANNON.Vec3(10, 50, 10);
+    const zoneShape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
+    const zoneBody = new CANNON.Body({
+        mass: 0, // static body
+        position: new CANNON.Vec3(position.x, position.y, position.z)
+    });
+    zoneBody.addShape(zoneShape);
+    zoneBody.isEndZone = true; // Custom property to identify the end zone
+    this.world.addBody(zoneBody);
+
+    return position;    
+}
+
+controlCar(input, vehicle) {
+    const maxSteerVal = Math.PI / 8;
+    const maxForce = 20;
+
+
+    if (input.forward) {
+        vehicle.setWheelForce(maxForce, 2);
+        vehicle.setWheelForce(maxForce, 3);
+    } else if (!input.forward && !input.backward) {
+        vehicle.setWheelForce(0, 2);
+        vehicle.setWheelForce(0, 3);
     }
 
-    update = (deltaTime) => {
-        this.world.step(deltaTime);
+
+    if (input.backward) {
+        vehicle.setWheelForce(-maxForce / 1.2, 2);
+        vehicle.setWheelForce(-maxForce / 1.2, 3);
+    } else if (!input.backward && !input.forward) {
+        vehicle.setWheelForce(0, 2);
+        vehicle.setWheelForce(0, 3);
     }
+
+    if (input.left) {
+        vehicle.setSteeringValue(maxSteerVal, 0);
+        vehicle.setSteeringValue(maxSteerVal, 1);
+        // vehicle.setSteeringValue(-maxSteerVal, 2);
+        // vehicle.setSteeringValue(-maxSteerVal, 3);
+    }
+
+    if (input.right) {
+        vehicle.setSteeringValue(-maxSteerVal, 0);
+        vehicle.setSteeringValue(-maxSteerVal, 1);
+        // vehicle.setSteeringValue(maxSteerVal, 2);
+        // vehicle.setSteeringValue(maxSteerVal, 3);
+    }
+    if (!input.right && !input.left) {
+        vehicle.setSteeringValue(0, 0);
+        vehicle.setSteeringValue(0, 1);
+        // vehicle.setSteeringValue(0, 2);
+        // vehicle.setSteeringValue(0, 3);
+    }
+
+    if (input.brake) {
+        vehicle.setWheelForce(0, 2);
+        vehicle.setWheelForce(0, 3);
+    }
+
+
+}
+
+update = (deltaTime) => {
+    this.world.step(deltaTime);
+}
 }

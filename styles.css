@@ -17,3 +17,47 @@ body{
     height: 100%;
     display: block;
 }
+
+
+#timer {
+    font-family: 'DSEG7 Classic', monospace;
+    color: white;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+}
+
+#congratulationsModal {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+#congratulationsModal > div {
+    background: #fff;
+    margin: 100px auto;
+    padding: 20px;
+    width: 300px;
+    position: relative;
+}
+
+#resetButton{
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}

@@ -14,54 +14,120 @@ document.addEventListener('DOMContentLoaded', () => {
     const stats = new Stats();
     document.body.appendChild(stats.dom);
 
+    //All code relevant to the timer
 
-    //await sceneSetup.addRover();
+
+    let timerStart = null;
+    let timerInterval = null;
+    let gameWon = false; 
+
+    function startTimer() {
+        if (!timerStart) {
+            timerStart = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = ((Date.now() - timerStart) / 1000).toFixed(1);
+                displayTimer(elapsed);
+            }, 100);
+        }
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function stopTimerAndShowModal() {
+        stopTimer();
+        const elapsed = ((Date.now() - timerStart) / 1000).toFixed(1);
+        document.getElementById('finalTime').textContent = elapsed;
+        document.getElementById('congratulationsModal').style.display = 'block';
+    }
+
+    function displayTimer(time) {
+        let timerDiv = document.getElementById('timer');
+        if (!timerDiv) {
+            timerDiv = document.createElement('div');
+            timerDiv.id = 'timer';
+            timerDiv.style.position = 'absolute';
+            timerDiv.style.top = '10px';
+            timerDiv.style.right = '10px';
+            timerDiv.style.fontSize = '20px';
+            timerDiv.style.color = 'white'; 
+            document.body.appendChild(timerDiv);
+        }
+        timerDiv.textContent = `Time: ${time} s`;
+    }
+
+    //All code relevant to the highscore
+    const submitBtn = document.getElementById('submitHighscore');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            saveHighscore();
+        });
+    } else {
+        console.log('Submit button not found');
+    }
+
+
+    function saveHighscore() {
+        const playerName = document.getElementById('playerName').value;
+        const finalTime = document.getElementById('finalTime').textContent;
+
+        if (!playerName) {
+            alert('Please enter your name.');
+            return;
+        }
+        const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
+        highscores.push({ name: playerName, time: finalTime });
+
+        localStorage.setItem('highscores', JSON.stringify(highscores));
+        document.getElementById('congratulationsModal').style.display = 'none';
+        console.log('Highscore saved:', playerName, finalTime);
+    }
+
+
+
+
+    //Code relevant to the game setup
     let roverMesh;
 
-    physicsWorld.addTestObject().then(testObject => {
-        // Test object has been loaded and added to the physics world
-        console.log('Test object added to the physics world:', testObject);
-    }
-    ).catch(error => {
-        // Handle any errors
-        console.error('Failed to load the test object:', error);
-    });
-
     sceneSetup.addRover().then(rover => {
-        // Rover has been loaded and added to the scene
         roverMesh = rover;
         console.log('Rover added to the scene:', rover);
     }).catch(error => {
-        // Handle any errors
         console.error('Failed to load the rover:', error);
     });
 
-    // physicsWorld.addMap().then(mapBody => {
-    //     // Map has been loaded and added to the physics world
-    //     console.log('Map added to the physics world:', mapBody);
-    // }).catch(error => {
-    //     // Handle any errors
-    //     console.error('Failed to load the map:', error);
-    // });
+    physicsWorld.addGround()
+    sceneSetup.addGround()
 
-    sceneSetup.addMap().then(Tiles => {
-        // Map has been loaded and added to the physics world
-        console.log('Map added to the physics world:', Tiles);
-    }).catch(error => {
-        // Handle any errors
-        console.error('Failed to load the map:', error);
-    });
+    const obstacles = sceneSetup.addObstacles();
+    physicsWorld.addObstacles(obstacles);
 
-
-    // const sphereBody = physicsWorld.addSphere();
-    const cannonDebugger = new CannonDebugger(sceneSetup.scene, physicsWorld.world);
     const car = physicsWorld.addVehicle();
 
+    const endZoneMesh = sceneSetup.addEndZone();
 
 
 
-
-    // In main.js
+    function checkCollision(roverMesh, endZoneMesh) {
+        if (!roverMesh || !endZoneMesh || gameWon) return false; // Skip check if game is already won
+        const roverBox = new THREE.Box3().setFromObject(roverMesh);
+        const endZoneBox = new THREE.Box3().setFromObject(endZoneMesh);
+        if (roverBox.intersectsBox(endZoneBox)) {
+            console.log('You win!');
+            if (!gameWon) { // Check if this is the first win trigger
+                stopTimerAndShowModal();
+                gameWon = true; // Set the flag so this doesn't trigger again
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    //All input code
     const input = {
         forward: false,
         backward: false,
@@ -73,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let start = false;
 
     document.addEventListener('keydown', (event) => {
+        startTimer();
         switch (event.key) {
             case 'w':
             case 'z': // Forward
@@ -120,28 +187,91 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    //All code relevant to the game reestart
 
+    function resetGame() {
+        // Reset game state variables
+        gameWon = false;
+    
+        // Reset timer
+        stopTimer();
+        timerStart = null;
+        displayTimer(0); // Reset timer display to 0
+    
+        // Reset rover mesh and physics body positions, rotations, and velocities
+        if (roverMesh) {
+            roverMesh.position.set(0, 1.5, 0);
+            roverMesh.quaternion.set(0, 0, 0, 1);
+        }
+        if (car.chassisBody) {
+            car.chassisBody.position.set(0, 1.5, 0);
+            car.chassisBody.quaternion.set(0, 0, 0, 1);
+            car.chassisBody.velocity.set(0, 0, 0);
+            car.chassisBody.angularVelocity.set(0, 0, 0);
+            car.chassisBody.force.set(0, 0, 0);
+            car.chassisBody.torque.set(0, 0, 0);
+            car.wheelForces = [0, 0, 0, 0];
+        }
+    
+        // Ensure the input controls are reset
+        input.forward = false;
+        input.backward = false;
+        input.left = false;
+        input.right = false;
+        input.brake = false;
+    
+        // Optionally, clear any pending asynchronous operations here
+        // For example, clear timeouts, intervals, or reset promises if necessary
+    
+        document.getElementById('congratulationsModal').style.display = 'none';
+    
+        console.clear(); // Clear the console if needed for debugging
+    }
+    
+    
+    // You can call this function to reset the game, e.g., by a button press
+    document.getElementById('resetButton').addEventListener('click', resetGame);
+    
+
+
+    //Code relevant to the animation and physics
     function animate() {
         requestAnimationFrame(animate);
 
         stats.begin();
         physicsWorld.update(1 / 60); // Assuming 60fps
         const deltaTime = 1 / 60;
-        cannonDebugger.update()
         physicsWorld.controlCar(input, car);
 
-        if (roverMesh) { // Ensure roverMesh is loaded
+        if (roverMesh) {
             roverMesh.position.copy(car.chassisBody.position);
             roverMesh.quaternion.copy(car.chassisBody.quaternion);
-            roverMesh.position.y += 0.5; // Adjust the height of the rover
-            // Apply the adjustment quaternion to the roverMesh's quaternion to correct orientation
+            roverMesh.position.y += 0.5;
             const adjustmentQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
             roverMesh.quaternion.multiply(adjustmentQuaternion);
             roverMesh.scale.set(5, 5, 5);
         }
-        // sceneSetup.camera.position.copy(car.chassisBody.position).add(new CANNON.Vec3(0, 10, 20));
 
-        // sceneSetup.controls.update();
+        if (checkCollision(roverMesh, endZoneMesh)) {
+            console.log('You win!');
+        }
+
+        // if (roverMesh) {
+        //     // Calculate the backward vector from the rover's orientation
+        //     const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(roverMesh.quaternion).negate();
+
+        //     // Set the desired offset: distance behind the rover and height above the ground
+        //     const offset = backward.multiplyScalar(25).add(new THREE.Vector3(0, 15, 0));
+
+        //     // Update the camera's position to be behind the rover
+        //     sceneSetup.camera.position.copy(roverMesh.position).add(offset);
+
+        //     // Make the camera look at the rover
+        //     sceneSetup.camera.lookAt(roverMesh.position);
+        // }
+
+        // Call this in your animation loop or in a function that's regularly updated
+
 
         stats.end();
 
